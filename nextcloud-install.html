@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nextcloud Install Guide (Raspberry Pi)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007acc;
+    }
+
+    .step {
+      background: #fff;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .step h2 {
+      font-size: 1.2rem;
+      color: #444;
+    }
+
+    pre {
+      background: #1e1e1e;
+      color: #dcdcdc;
+      border-radius: 5px;
+      overflow-x: auto;
+      position: relative;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    pre code {
+      display: block;
+      padding: 12px 16px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    button.copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #06a6ff;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button.copy:hover {
+      background: #007acc;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Nextcloud Setup for Beginners (Raspberry Pi)</h1>
+
+<div class="step">
+  <h2>Step 1: Connect to Your Raspberry Pi</h2>
+  <p>If you are using a monitor and keyboard, log in with:</p>
+  <ul>
+    <li><strong>Username:</strong> pi</li>
+    <li><strong>Password:</strong> raspberry (or the one you set)</li>
+  </ul>
+  <p>If you're using another computer and want to connect remotely, use this command in your terminal:</p>
+  <pre><code>ssh pi@raspberrypi.local</code><button class="copy">Copy</button></pre>
+  <p>If this doesn’t work, skip to Step 7 to find your Pi’s IP address first.</p>
+</div>
+
+<div class="step">
+  <h2>Step 2: Update Your Raspberry Pi</h2>
+  <p>This makes sure all the software is up to date.</p>
+  <pre><code>sudo apt update && sudo apt upgrade -y</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 3: Install Web Server and PHP</h2>
+  <p>This installs Apache (your web server), MariaDB (your database), and PHP (so Nextcloud can run).</p>
+  <pre><code>sudo apt install apache2 mariadb-server libapache2-mod-php php php-mysql php-gd php-json php-curl php-mbstring php-intl php-imagick php-xml php-zip php-bcmath php-gmp unzip -y</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 4: Set Up the Database for Nextcloud</h2>
+  <p>This creates the database that Nextcloud will use to store user data and files.</p>
+  <pre><code>sudo mysql -u root -p</code><button class="copy">Copy</button></pre>
+  <p>It will ask you for a password. Just press Enter if you haven’t set one yet. Then type these commands one by one:</p>
+  <pre><code>CREATE DATABASE nextcloud;
+CREATE USER 'nextclouduser'@'localhost' IDENTIFIED BY 'yourpassword';
+GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextclouduser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 5: Download Nextcloud</h2>
+  <p>This gets the latest version of Nextcloud and sets it up in your web folder.</p>
+  <pre><code>cd /var/www/html
+sudo wget https://download.nextcloud.com/server/releases/latest.zip
+sudo unzip latest.zip
+sudo chown -R www-data:www-data nextcloud
+sudo chmod -R 755 nextcloud</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 6: Configure Apache to Serve Nextcloud</h2>
+  <p>This tells Apache to use Nextcloud as your website.</p>
+  <pre><code>sudo nano /etc/apache2/sites-available/nextcloud.conf</code><button class="copy">Copy</button></pre>
+  <p>Paste this into the file:</p>
+  <pre><code>&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html/nextcloud
+    ServerName your-pi-ip
+
+    &lt;Directory /var/www/html/nextcloud/&gt;
+        Require all granted
+        AllowOverride All
+        Options FollowSymLinks MultiViews
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code><button class="copy">Copy</button></pre>
+  <p>Save the file (Ctrl + X, then Y, then Enter), then run:</p>
+  <pre><code>sudo a2ensite nextcloud.conf
+sudo a2enmod rewrite headers env dir mime
+sudo systemctl restart apache2</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 7: Find Your Raspberry Pi’s IP Address</h2>
+  <p>If you don’t know your Raspberry Pi’s IP address, use this command:</p>
+  <pre><code>hostname -I</code><button class="copy">Copy</button></pre>
+  <p>You'll see something like: <code>192.168.1.35</code>. This is the address you'll use in your browser to access Nextcloud.</p>
+</div>
+
+<div class="step">
+  <h2>Step 8: Set Up Nextcloud from the Browser</h2>
+  <p>Open a browser on your computer and go to:</p>
+  <pre><code>http://192.168.1.35/nextcloud</code><button class="copy">Copy</button></pre>
+  <p>Replace <code>192.168.1.35</code> with your Pi's IP address.</p>
+  <ul>
+    <li>Create an admin username and password.</li>
+    <li>Use this for the database:</li>
+    <ul>
+      <li>Database user: <strong>nextclouduser</strong></li>
+      <li>Password: <strong>yourpassword</strong></li>
+      <li>Database name: <strong>nextcloud</strong></li>
+      <li>Host: <strong>localhost</strong></li>
+    </ul>
+  </ul>
+</div>
+
+<div class="step">
+  <h2>Step 9: Make Sure Apache and MariaDB Start Automatically</h2>
+  <p>This ensures that your server and database turn on when the Pi boots.</p>
+  <pre><code>sudo systemctl enable apache2
+sudo systemctl enable mariadb</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 10: (Optional) Mount an External Hard Drive</h2>
+  <p>If you're using an external hard drive for storage, follow these steps:</p>
+  <pre><code>lsblk</code><button class="copy">Copy</button></pre>
+  <p>Find your external drive (like <code>/dev/sda1</code>)</p>
+  <pre><code>sudo mkdir /media/nextcloud-hdd
+sudo mount /dev/sda1 /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+  <p>To mount it automatically on boot:</p>
+  <pre><code>sudo blkid</code><button class="copy">Copy</button></pre>
+  <p>Copy the UUID and edit fstab:</p>
+  <pre><code>sudo nano /etc/fstab</code><button class="copy">Copy</button></pre>
+  <p>Add this line (update UUID and type as needed):</p>
+  <pre><code>UUID=xxxx-xxxx /media/nextcloud-hdd ext4 defaults,nofail 0 2</code><button class="copy">Copy</button></pre>
+  <p>Then test:</p>
+  <pre><code>sudo mount -a</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 11: (Optional) Give Nextcloud Access to the HDD</h2>
+  <pre><code>sudo chown -R www-data:www-data /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+</div>
+
+<div class="step">
+  <h2>Step 12: (Optional) Secure with HTTPS</h2>
+  <p>If you want to add SSL encryption:</p>
+  <pre><code>sudo apt install certbot python3-certbot-apache -y
+sudo certbot --apache</code><button class="copy">Copy</button></pre>
+</div>
+
+<script>
+  document.querySelectorAll('.copy').forEach(button => {
+    button.addEventListener('click', () => {
+      const code = button.parentElement.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => button.textContent = 'Copy', 2000);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
