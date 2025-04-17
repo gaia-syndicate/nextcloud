@@ -73,14 +73,34 @@
 
 <div class="step">
   <h2>Step 1: Connect to Your Raspberry Pi</h2>
-  <p>If you are using a monitor and keyboard, log in with:</p>
+  <p>If you’re using a monitor and keyboard directly connected to the Raspberry Pi, log in using:</p>
   <ul>
     <li><strong>Username:</strong> pi</li>
     <li><strong>Password:</strong> raspberry (or the one you set)</li>
   </ul>
-  <p>If you're using another computer and want to connect remotely, use this command in your terminal:</p>
-  <pre><code>ssh pi@raspberrypi.local</code><button class="copy">Copy</button></pre>
-  <p>If this doesn’t work, skip to Step 7 to find your Pi’s IP address first.</p>
+  <p>If you're using another computer or phone, the easiest way is to use an SSH app.</p>
+
+  <h3>🔷 Recommended: <a href="https://termius.com/download" target="_blank">Termius</a></h3>
+  <ul>
+    <li>Works on Windows, Mac, Linux, Android, and iOS</li>
+    <li>Create a free account (optional)</li>
+    <li>In Termius, create a new Host:</li>
+    <ul>
+      <li><strong>Address:</strong> raspberrypi.local (or use your Pi’s IP)</li>
+      <li><strong>Username:</strong> pi</li>
+      <li><strong>Password:</strong> raspberry</li>
+    </ul>
+    <li>Click <strong>Connect</strong></li>
+  </ul>
+
+  <h3>🖥️ Alternative for Windows: <a href="https://www.putty.org/" target="_blank">PuTTY</a></h3>
+  <ul>
+    <li>Download from <a href="https://www.putty.org/" target="_blank">putty.org</a></li>
+    <li>Open PuTTY and type <code>raspberrypi.local</code></li>
+    <li>Click "Open" and log in with <code>pi</code> / <code>raspberry</code></li>
+  </ul>
+
+  <p>If the above address doesn’t work, skip to Step 7 to find your Raspberry Pi’s IP address.</p>
 </div>
 
 <div class="step">
@@ -91,15 +111,14 @@
 
 <div class="step">
   <h2>Step 3: Install Web Server and PHP</h2>
-  <p>This installs Apache (your web server), MariaDB (your database), and PHP (so Nextcloud can run).</p>
+  <p>This installs Apache, MariaDB, and PHP so Nextcloud can run.</p>
   <pre><code>sudo apt install apache2 mariadb-server libapache2-mod-php php php-mysql php-gd php-json php-curl php-mbstring php-intl php-imagick php-xml php-zip php-bcmath php-gmp unzip -y</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 4: Set Up the Database for Nextcloud</h2>
-  <p>This creates the database that Nextcloud will use to store user data and files.</p>
+  <h2>Step 4: Set Up the Database</h2>
   <pre><code>sudo mysql -u root -p</code><button class="copy">Copy</button></pre>
-  <p>It will ask you for a password. Just press Enter if you haven’t set one yet. Then type these commands one by one:</p>
+  <p>Press Enter if no password is set. Then run these one by one:</p>
   <pre><code>CREATE DATABASE nextcloud;
 CREATE USER 'nextclouduser'@'localhost' IDENTIFIED BY 'yourpassword';
 GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextclouduser'@'localhost';
@@ -109,7 +128,6 @@ EXIT;</code><button class="copy">Copy</button></pre>
 
 <div class="step">
   <h2>Step 5: Download Nextcloud</h2>
-  <p>This gets the latest version of Nextcloud and sets it up in your web folder.</p>
   <pre><code>cd /var/www/html
 sudo wget https://download.nextcloud.com/server/releases/latest.zip
 sudo unzip latest.zip
@@ -118,82 +136,71 @@ sudo chmod -R 755 nextcloud</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 6: Configure Apache to Serve Nextcloud</h2>
-  <p>This tells Apache to use Nextcloud as your website.</p>
+  <h2>Step 6: Configure Apache</h2>
   <pre><code>sudo nano /etc/apache2/sites-available/nextcloud.conf</code><button class="copy">Copy</button></pre>
-  <p>Paste this into the file:</p>
+  <p>Paste this in the file:</p>
   <pre><code>&lt;VirtualHost *:80&gt;
-    DocumentRoot /var/www/html/nextcloud
-    ServerName your-pi-ip
+  DocumentRoot /var/www/html/nextcloud
+  ServerName your-pi-ip
 
-    &lt;Directory /var/www/html/nextcloud/&gt;
-        Require all granted
-        AllowOverride All
-        Options FollowSymLinks MultiViews
-    &lt;/Directory&gt;
+  &lt;Directory /var/www/html/nextcloud/&gt;
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+  &lt;/Directory&gt;
 &lt;/VirtualHost&gt;</code><button class="copy">Copy</button></pre>
-  <p>Save the file (Ctrl + X, then Y, then Enter), then run:</p>
+  <p>Then run:</p>
   <pre><code>sudo a2ensite nextcloud.conf
 sudo a2enmod rewrite headers env dir mime
 sudo systemctl restart apache2</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 7: Find Your Raspberry Pi’s IP Address</h2>
-  <p>If you don’t know your Raspberry Pi’s IP address, use this command:</p>
+  <h2>Step 7: Find Pi's IP Address</h2>
   <pre><code>hostname -I</code><button class="copy">Copy</button></pre>
-  <p>You'll see something like: <code>192.168.1.35</code>. This is the address you'll use in your browser to access Nextcloud.</p>
+  <p>Use the IP to access your Pi in a browser.</p>
 </div>
 
 <div class="step">
-  <h2>Step 8: Set Up Nextcloud from the Browser</h2>
-  <p>Open a browser on your computer and go to:</p>
-  <pre><code>http://192.168.1.35/nextcloud</code><button class="copy">Copy</button></pre>
-  <p>Replace <code>192.168.1.35</code> with your Pi's IP address.</p>
+  <h2>Step 8: Finish in Browser</h2>
+  <p>Open a browser and go to:</p>
+  <pre><code>http://192.168.x.x/nextcloud</code><button class="copy">Copy</button></pre>
+  <p>Replace IP with yours. Use:</p>
   <ul>
-    <li>Create an admin username and password.</li>
-    <li>Use this for the database:</li>
-    <ul>
-      <li>Database user: <strong>nextclouduser</strong></li>
-      <li>Password: <strong>yourpassword</strong></li>
-      <li>Database name: <strong>nextcloud</strong></li>
-      <li>Host: <strong>localhost</strong></li>
-    </ul>
+    <li>User: <strong>nextclouduser</strong></li>
+    <li>Password: <strong>yourpassword</strong></li>
+    <li>Database: <strong>nextcloud</strong></li>
+    <li>Host: <strong>localhost</strong></li>
   </ul>
 </div>
 
 <div class="step">
-  <h2>Step 9: Make Sure Apache and MariaDB Start Automatically</h2>
-  <p>This ensures that your server and database turn on when the Pi boots.</p>
+  <h2>Step 9: Enable Services</h2>
   <pre><code>sudo systemctl enable apache2
 sudo systemctl enable mariadb</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 10: (Optional) Mount an External Hard Drive</h2>
-  <p>If you're using an external hard drive for storage, follow these steps:</p>
+  <h2>Step 10: Mount External HDD (Optional)</h2>
   <pre><code>lsblk</code><button class="copy">Copy</button></pre>
-  <p>Find your external drive (like <code>/dev/sda1</code>)</p>
+  <p>Find the drive (e.g., /dev/sda1)</p>
   <pre><code>sudo mkdir /media/nextcloud-hdd
 sudo mount /dev/sda1 /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
-  <p>To mount it automatically on boot:</p>
+  <p>Auto-mount at boot:</p>
   <pre><code>sudo blkid</code><button class="copy">Copy</button></pre>
-  <p>Copy the UUID and edit fstab:</p>
   <pre><code>sudo nano /etc/fstab</code><button class="copy">Copy</button></pre>
-  <p>Add this line (update UUID and type as needed):</p>
+  <p>Add this:</p>
   <pre><code>UUID=xxxx-xxxx /media/nextcloud-hdd ext4 defaults,nofail 0 2</code><button class="copy">Copy</button></pre>
-  <p>Then test:</p>
   <pre><code>sudo mount -a</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 11: (Optional) Give Nextcloud Access to the HDD</h2>
+  <h2>Step 11: Give Access to HDD (Optional)</h2>
   <pre><code>sudo chown -R www-data:www-data /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 12: (Optional) Secure with HTTPS</h2>
-  <p>If you want to add SSL encryption:</p>
+  <h2>Step 12: Enable HTTPS (Optional)</h2>
   <pre><code>sudo apt install certbot python3-certbot-apache -y
 sudo certbot --apache</code><button class="copy">Copy</button></pre>
 </div>
