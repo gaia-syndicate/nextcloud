@@ -190,28 +190,45 @@
 
 <div class="step">
   <h2>Step 4: Set Up the Database</h2>
+
+  <p>Nextcloud needs a database to store usernames, settings, and file info. We'll use <strong>MariaDB</strong>, a lightweight version of MySQL.</p>
+
+  <h3>🔹 A. Open the MariaDB Console</h3>
+  <p>This command lets you interact with the database server:</p>
   <pre><code>sudo mysql -u root -p</code><button class="copy">Copy</button></pre>
-  <p>Press Enter if no password is set. Then run these one by one:</p>
+  <p>🔸 If prompted for a password, just press <code>Enter</code> (there is no password set by default).</p>
+
+  <h3>🔹 B. Create the Database and User</h3>
+  <p>Copy and paste the following commands <strong>one by one</strong> into the MariaDB prompt:</p>
   <pre><code>CREATE DATABASE nextcloud;
 CREATE USER 'nextclouduser'@'localhost' IDENTIFIED BY 'yourpassword';
 GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextclouduser'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;</code><button class="copy">Copy</button></pre>
+
+  <p>Here’s what each line does:</p>
+  <ul>
+    <li><strong>CREATE DATABASE</strong>: Makes a new database called <code>nextcloud</code></li>
+    <li><strong>CREATE USER</strong>: Creates a user called <code>nextclouduser</code> with a password (<code>yourpassword</code>)</li>
+    <li><strong>GRANT ALL PRIVILEGES</strong>: Gives full access to that user only for the <code>nextcloud</code> database</li>
+    <li><strong>FLUSH PRIVILEGES</strong>: Applies the changes</li>
+    <li><strong>EXIT</strong>: Leaves the MariaDB interface</li>
+  </ul>
+
+  <h3>🛡️ Tip:</h3>
+  <p>Make sure to remember the <strong>username</strong> and <strong>password</strong> — you'll need them when setting up Nextcloud in your browser later.</p>
 </div>
 
 <div class="step">
-  <h2>Step 5: Download Nextcloud</h2>
-  <pre><code>cd /var/www/html
-sudo wget https://download.nextcloud.com/server/releases/latest.zip
-sudo unzip latest.zip
-sudo chown -R www-data:www-data nextcloud
-sudo chmod -R 755 nextcloud</code><button class="copy">Copy</button></pre>
-</div>
+  <h2>Step 5: Configure Apache</h2>
 
-<div class="step">
-  <h2>Step 6: Configure Apache</h2>
+  <p>In this step, you'll tell Apache where to find your Nextcloud files and how to serve them to browsers.</p>
+
+  <h3>🔹 A. Create a New Apache Configuration File</h3>
+  <p>This file will define how your site is accessed:</p>
   <pre><code>sudo nano /etc/apache2/sites-available/nextcloud.conf</code><button class="copy">Copy</button></pre>
-  <p>Paste this in the file:</p>
+
+  <p>Paste the following into the file:</p>
   <pre><code>&lt;VirtualHost *:80&gt;
   DocumentRoot /var/www/html/nextcloud
   ServerName your-pi-ip
@@ -222,20 +239,45 @@ sudo chmod -R 755 nextcloud</code><button class="copy">Copy</button></pre>
     Options FollowSymLinks MultiViews
   &lt;/Directory&gt;
 &lt;/VirtualHost&gt;</code><button class="copy">Copy</button></pre>
-  <p>Then run:</p>
+
+  <p>🔸 Replace <code>your-pi-ip</code> with your Raspberry Pi’s IP address or your No-IP domain name (e.g., <code>mypihost.ddns.net</code>).</p>
+
+  <h3>🔹 B. Enable the New Site and Required Modules</h3>
+  <p>These commands activate your config and enable necessary Apache features:</p>
   <pre><code>sudo a2ensite nextcloud.conf
-sudo a2enmod rewrite headers env dir mime
-sudo systemctl restart apache2</code><button class="copy">Copy</button></pre>
+sudo a2enmod rewrite headers env dir mime</code><button class="copy">Copy</button></pre>
+
+  <p><strong>What each command does:</strong></p>
+  <ul>
+    <li><code>a2ensite</code>: Activates your new site config</li>
+    <li><code>a2enmod</code>: Turns on key Apache features like URL rewriting and header handling</li>
+  </ul>
+
+  <h3>🔹 C. Restart Apache</h3>
+  <p>This applies the changes:</p>
+  <pre><code>sudo systemctl restart apache2</code><button class="copy">Copy</button></pre>
+
+  <h3>💡 Tips for Beginners:</h3>
+  <ul>
+    <li>If Apache fails to restart, double-check the config file for typos.</li>
+    <li>To test your Apache configuration before restarting, run:<br>
+      <pre><code>sudo apache2ctl configtest</code><button class="copy">Copy</button></pre>
+      If it says <code>Syntax OK</code>, you're good to go.</li>
+    <li>You can also check Apache status anytime with:<br>
+      <pre><code>sudo systemctl status apache2</code><button class="copy">Copy</button></pre>
+    </li>
+  </ul>
 </div>
 
+
 <div class="step">
-  <h2>Step 7: Find Pi's IP Address</h2>
+  <h2>Step 6: Find Pi's IP Address</h2>
   <pre><code>hostname -I</code><button class="copy">Copy</button></pre>
   <p>Use the IP to access your Pi in a browser.</p>
 </div>
 
 <div class="step">
-  <h2>Step 8: Finish in Browser</h2>
+  <h2>Step 7: Finish in Browser</h2>
   <p>Open a browser and go to:</p>
   <pre><code>http://192.168.x.x/nextcloud</code><button class="copy">Copy</button></pre>
   <p>Replace IP with yours. Use:</p>
@@ -248,35 +290,183 @@ sudo systemctl restart apache2</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 9: Enable Services</h2>
+  <h2>Step 8: Enable Services</h2>
   <pre><code>sudo systemctl enable apache2
 sudo systemctl enable mariadb</code><button class="copy">Copy</button></pre>
 </div>
 
 <div class="step">
-  <h2>Step 10: Mount External HDD (Optional)</h2>
+  <h2>Step 9: Mount External HDD (Optional)</h2>
+
+  <p>If you want to use an external hard drive for storing Nextcloud files, follow these steps to mount it permanently.</p>
+
+  <h3>🔹 A. Plug in Your Drive</h3>
+  <p>Connect your USB hard drive to the Raspberry Pi.</p>
+
+  <h3>🔹 B. Find the Drive Name</h3>
+  <p>Run this command to list all storage devices:</p>
   <pre><code>lsblk</code><button class="copy">Copy</button></pre>
-  <p>Find the drive (e.g., /dev/sda1)</p>
-  <pre><code>sudo mkdir /media/nextcloud-hdd
-sudo mount /dev/sda1 /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
-  <p>Auto-mount at boot:</p>
+  <p>Look for something like <code>/dev/sda1</code> with a size that matches your drive. Make note of the name (e.g., <code>sda1</code>).</p>
+
+  <h3>🔹 C. Create a Mount Point</h3>
+  <p>This is the folder where the drive will be accessed from:</p>
+  <pre><code>sudo mkdir /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+
+  <h3>🔹 D. Mount the Drive Manually (Temporary)</h3>
+  <pre><code>sudo mount /dev/sda1 /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+  <p>This temporarily mounts the drive. But it won’t survive a reboot—so next we’ll set up auto-mounting.</p>
+
+  <h3>🔹 E. Get the Drive’s UUID</h3>
+  <p>The UUID is a unique ID that doesn’t change, even if the drive’s name changes:</p>
   <pre><code>sudo blkid</code><button class="copy">Copy</button></pre>
+  <p>Find the line for <code>/dev/sda1</code> (or your device) and copy the UUID value.</p>
+
+  <h3>🔹 F. Edit the fstab File (Permanent Mount)</h3>
+  <p>This file controls what gets mounted at boot:</p>
   <pre><code>sudo nano /etc/fstab</code><button class="copy">Copy</button></pre>
-  <p>Add this:</p>
+  <p>At the bottom, add a new line using the UUID you copied:</p>
   <pre><code>UUID=xxxx-xxxx /media/nextcloud-hdd ext4 defaults,nofail 0 2</code><button class="copy">Copy</button></pre>
+  <p>⚠️ Replace <code>xxxx-xxxx</code> with your actual UUID. If your drive is NTFS or exFAT, change <code>ext4</code> to <code>ntfs</code> or <code>exfat</code>.</p>
+
+  <h3>🔹 G. Test It</h3>
+  <p>Make sure your changes work:</p>
   <pre><code>sudo mount -a</code><button class="copy">Copy</button></pre>
+  <p>If there are no errors, your drive is now permanently mounted!</p>
+
+  <h3>🔍 Tip:</h3>
+  <p>You can check if it worked by running:</p>
+  <pre><code>df -h</code><button class="copy">Copy</button></pre>
+  <p>This shows mounted drives and their available space.</p>
 </div>
 
+
 <div class="step">
-  <h2>Step 11: Give Access to HDD (Optional)</h2>
+  <h2>Step 10: Give Access to External Hard Drive (Optional)</h2>
+
+  <p>To allow Nextcloud to read and write files to your mounted HDD, you need to give proper permissions to the web server (Apache).</p>
+
+  <h3>🔹 A. Change Ownership to Apache</h3>
+  <p>This gives full control of the drive to Apache's default user <code>www-data</code>:</p>
   <pre><code>sudo chown -R www-data:www-data /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+
+  <p><strong>What it does:</strong> This command recursively (<code>-R</code>) changes the owner of all files and folders inside the HDD mount point to the web server user.</p>
+
+  <h3>🔹 B. Adjust File Permissions</h3>
+  <p>This ensures that the Apache server can read, write, and execute within the mounted folder:</p>
+  <pre><code>sudo chmod -R 750 /media/nextcloud-hdd</code><button class="copy">Copy</button></pre>
+
+  <p><strong>What it means:</strong></p>
+  <ul>
+    <li><code>7</code> = read, write, execute (for owner: www-data)</li>
+    <li><code>5</code> = read and execute (for group)</li>
+    <li><code>0</code> = no access (for others)</li>
+  </ul>
+
+  <p>This keeps the drive secure while letting Nextcloud function properly.</p>
+
+  <h3>🔹 C. Add Nextcloud Data Directory (Optional)</h3>
+  <p>If you want Nextcloud to store user files directly on the HDD, create a dedicated folder:</p>
+  <pre><code>sudo mkdir /media/nextcloud-hdd/data
+sudo chown -R www-data:www-data /media/nextcloud-hdd/data</code><button class="copy">Copy</button></pre>
+
+  <p>Then, during the browser setup in Step 7, set the <strong>Data Folder</strong> as:</p>
+  <pre><code>/media/nextcloud-hdd/data</code><button class="copy">Copy</button></pre>
+
+  <h3>✅ Done!</h3>
+  <p>Your HDD is now ready for Nextcloud file storage with proper permissions and access control.</p>
 </div>
 
+
 <div class="step">
-  <h2>Step 12: Enable HTTPS (Optional)</h2>
-  <pre><code>sudo apt install certbot python3-certbot-apache -y
-sudo certbot --apache</code><button class="copy">Copy</button></pre>
+  <h2>Step 11: Enable HTTPS (Optional but Recommended)</h2>
+
+  <p>HTTPS encrypts your connection, making it safer—especially if you plan to access your Nextcloud over the internet.</p>
+
+  <h3>🔹 A. Install Certbot (Let's Encrypt)</h3>
+  <p>This tool automatically sets up a free SSL certificate from Let's Encrypt.</p>
+  <pre><code>sudo apt install certbot python3-certbot-apache -y</code><button class="copy">Copy</button></pre>
+
+  <h3>🔹 B. Run Certbot</h3>
+  <p>This command will configure your Apache web server to use HTTPS:</p>
+  <pre><code>sudo certbot --apache</code><button class="copy">Copy</button></pre>
+
+  <p>When you run it:</p>
+  <ul>
+    <li>It will ask for your email (used for renewal notices)</li>
+    <li>It will ask you to agree to the terms</li>
+    <li>Then it will scan your Apache config and ask which domain to secure</li>
+    <li>Select your <strong>No-IP domain</strong> (e.g. <code>mypihost.ddns.net</code>)</li>
+    <li>Choose the option to redirect all traffic to HTTPS</li>
+  </ul>
+
+  <p>If successful, you’ll see a confirmation and your site will now be accessible at:</p>
+  <pre><code>https://yourname.ddns.net/nextcloud</code><button class="copy">Copy</button></pre>
+
+  <h3>🔄 C. Auto-Renewal (Built-In)</h3>
+  <p>Certbot sets up automatic renewal by default. You can test it with:</p>
+  <pre><code>sudo certbot renew --dry-run</code><button class="copy">Copy</button></pre>
+
+  <h3>⚠️ Note:</h3>
+  <p>If your router or firewall blocks port <strong>80</strong> or <strong>443</strong>, this will fail. Make sure those ports are forwarded to your Raspberry Pi’s IP address.</p>
 </div>
+
+
+<div class="step">
+  <h2>Step 12: Download Nextcloud and Set Up No-IP Access</h2>
+
+  <h3>🔹 A. Download Nextcloud</h3>
+  <p>This installs the Nextcloud files into your web directory.</p>
+  <pre><code>cd /var/www/html
+sudo wget https://download.nextcloud.com/server/releases/latest.zip
+sudo unzip latest.zip
+sudo chown -R www-data:www-data nextcloud
+sudo chmod -R 755 nextcloud</code><button class="copy">Copy</button></pre>
+
+  <h3>🔹 B. Set Up No-IP Dynamic DNS (Optional)</h3>
+  <p>This lets you access your Raspberry Pi remotely using a hostname like <code>yourname.ddns.net</code>.</p>
+
+  <h4>1. Create Your No-IP Account</h4>
+  <ul>
+    <li>Go to <a href="https://www.noip.com/" target="_blank">noip.com</a> and create a free account</li>
+    <li>Pick a free hostname like <code>mypihost.ddns.net</code></li>
+    <li>Save the domain—it’s how you’ll access your Pi from the internet</li>
+  </ul>
+
+  <h4>2. Install the No-IP Client on Pi</h4>
+  <pre><code>cd ~
+sudo apt install git build-essential -y
+git clone https://github.com/no-ip/noip-ddns
+cd noip-ddns
+make
+sudo make install</code><button class="copy">Copy</button></pre>
+  <p>During setup, enter your No-IP email, password, and hostname.</p>
+
+  <h4>3. Start and Enable No-IP Client</h4>
+  <pre><code>sudo /usr/local/bin/noip2
+sudo /usr/local/bin/noip2 -S</code><button class="copy">Copy</button></pre>
+
+  <h4>4. Make No-IP Run on Boot</h4>
+  <pre><code>sudo nano /etc/systemd/system/noip2.service</code><button class="copy">Copy</button></pre>
+  <p>Paste this:</p>
+  <pre><code>[Unit]
+Description=No-IP Dynamic DNS Update Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/noip2
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code><button class="copy">Copy</button></pre>
+  <pre><code>sudo systemctl enable noip2
+sudo systemctl start noip2</code><button class="copy">Copy</button></pre>
+
+  <h4>✅ Access Nextcloud Remotely</h4>
+  <p>Now go to:</p>
+  <pre><code>http://yourname.ddns.net/nextcloud</code><button class="copy">Copy</button></pre>
+  <p>This will redirect to your Raspberry Pi, even if your home IP changes.</p>
+</div>
+
 
 <!-- Scripts -->
 <script>
